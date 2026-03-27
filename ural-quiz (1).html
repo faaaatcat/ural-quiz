@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Легенды Урала — Квиз</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Alegreya:ital,wght@0,400;0,500;1,400&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0e0c0a;
+    --surface:   #1a1612;
+    --card:      #231e18;
+    --gold:      #c9954a;
+    --gold-lt:   #e8b96a;
+    --gold-dk:   #8a5f20;
+    --cream:     #f0e6d0;
+    --muted:     #8a7a62;
+    --green:     #4a7c59;
+    --green-lt:  #6ab885;
+    --red:       #8b3a3a;
+    --red-lt:    #c06060;
+    --border:    rgba(201,149,74,0.2);
+    --shadow:    0 8px 40px rgba(0,0,0,0.6);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Alegreya', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(201,149,74,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 90%, rgba(74,124,89,0.05) 0%, transparent 60%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  /* ── MOUNTAIN SILHOUETTE (SVG background element) ── */
+  .mountains-bg {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 0;
+    opacity: 0.07;
+    pointer-events: none;
+    overflow: hidden;
+    height: 220px;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    position: relative; z-index: 1;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 60px 0 40px;
+    position: relative;
+  }
+
+  .header-ornament {
+    display: flex; align-items: center; justify-content: center;
+    gap: 16px; margin-bottom: 20px;
+  }
+  .header-ornament::before,
+  .header-ornament::after {
+    content: '';
+    height: 1px; width: 60px;
+    background: linear-gradient(90deg, transparent, var(--gold));
+  }
+  .header-ornament::after {
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .header-ornament span {
+    color: var(--gold); font-size: 20px;
+  }
+
+  .klass-badge {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 4px 16px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 900;
+    line-height: 1.1;
+    color: var(--cream);
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+  }
+  h1 em {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .subtitle {
+    font-family: 'Alegreya', serif;
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 36px;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 36px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dk), var(--gold));
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+  .progress-label {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  /* ── SCORE CHIP ── */
+  .score-chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(201,149,74,0.1);
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    padding: 6px 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--gold-lt);
+    transition: all 0.3s;
+  }
+  .score-chip .score-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  /* ── QUESTION CARD ── */
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: clamp(24px, 5vw, 44px);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+    animation: slideUp 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .question-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold-dk), var(--gold), var(--gold-dk));
+  }
+
+  .q-number {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .q-number::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border);
+  }
+
+  .q-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.1rem, 2.5vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--cream);
+    margin-bottom: 28px;
+  }
+
+  /* ── OPTIONS ── */
+  .options {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 0;
+  }
+
+  .option-btn {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 14px 20px;
+    color: var(--cream);
+    font-family: 'Alegreya', serif;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: flex-start; gap: 14px;
+    line-height: 1.4;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    background: rgba(201,149,74,0.1);
+    border-color: var(--gold);
+    transform: translateX(4px);
+  }
+
+  .option-btn:disabled { cursor: default; }
+
+  .option-letter {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0;
+    margin-top: 1px;
+    transition: all 0.2s;
+  }
+
+  .option-btn:hover:not(:disabled) .option-letter {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* states */
+  .option-btn.correct {
+    background: rgba(74,124,89,0.18);
+    border-color: var(--green-lt);
+    animation: flashCorrect 0.4s ease;
+  }
+  .option-btn.correct .option-letter {
+    background: var(--green);
+    border-color: var(--green-lt);
+    color: #fff;
+  }
+  .option-btn.wrong {
+    background: rgba(139,58,58,0.18);
+    border-color: var(--red-lt);
+    animation: flashWrong 0.4s ease;
+  }
+  .option-btn.wrong .option-letter {
+    background: var(--red);
+    border-color: var(--red-lt);
+    color: #fff;
+  }
+  .option-btn.reveal-correct {
+    background: rgba(74,124,89,0.1);
+    border-color: rgba(106,184,133,0.4);
+  }
+  .option-btn.reveal-correct .option-letter {
+    border-color: var(--green-lt);
+    color: var(--green-lt);
+  }
+
+  /* ── EXPLANATION BOX ── */
+  .explanation {
+    margin-top: 22px;
+    background: rgba(201,149,74,0.06);
+    border: 1px solid rgba(201,149,74,0.25);
+    border-left: 3px solid var(--gold);
+    border-radius: 10px;
+    padding: 18px 22px;
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+  .explanation.show { display: block; }
+  .explanation-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .explanation p {
+    font-size: 0.95rem;
+    color: rgba(240,230,208,0.85);
+    line-height: 1.7;
+  }
+  .answer-label {
+    font-weight: 700;
+    color: var(--green-lt);
+  }
+
+  /* ── NEXT BUTTON ── */
+  .next-wrap {
+    margin-top: 24px;
+    display: flex; justify-content: flex-end;
+  }
+
+  .btn-next {
+    background: linear-gradient(135deg, var(--gold-dk), var(--gold));
+    border: none;
+    border-radius: 8px;
+    padding: 13px 32px;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #0e0c0a;
+    font-weight: 700;
+    cursor: pointer;
+    display: none;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(201,149,74,0.3);
+  }
+  .btn-next:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(201,149,74,0.45);
+  }
+  .btn-next.show { display: inline-flex; align-items: center; gap: 8px; }
+
+  /* ── RESULT SCREEN ── */
+  .result-screen {
+    display: none;
+    text-align: center;
+    animation: slideUp 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .result-screen.show { display: block; }
+
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: clamp(32px, 6vw, 60px) clamp(24px, 5vw, 50px);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold-dk), var(--gold), var(--gold-dk));
+  }
+
+  .big-score {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(4rem, 15vw, 7rem);
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1;
+    margin: 10px 0;
+    text-shadow: 0 0 60px rgba(201,149,74,0.4);
+  }
+
+  .score-of {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+
+  .result-desc {
+    font-size: 1rem;
+    color: rgba(240,230,208,0.7);
+    max-width: 500px;
+    margin: 0 auto 32px;
+    font-style: italic;
+  }
+
+  .stars {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    letter-spacing: 6px;
+  }
+
+  .btn-restart {
+    background: transparent;
+    border: 1.5px solid var(--gold);
+    border-radius: 8px;
+    padding: 13px 36px;
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .btn-restart:hover {
+    background: var(--gold);
+    color: #0e0c0a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(201,149,74,0.35);
+  }
+
+  /* ── ANSWERS SUMMARY ── */
+  .summary {
+    margin-top: 32px;
+    text-align: left;
+  }
+  .summary-title {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .summary-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .summary-list {
+    display: grid; gap: 8px;
+  }
+  .summary-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 0.9rem;
+  }
+  .summary-icon {
+    flex-shrink: 0;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; margin-top: 1px;
+  }
+  .summary-icon.ok  { background: rgba(74,124,89,0.3); color: var(--green-lt); }
+  .summary-icon.bad { background: rgba(139,58,58,0.3); color: var(--red-lt); }
+  .summary-q { color: rgba(240,230,208,0.8); line-height: 1.4; }
+
+  /* ── INTRO SCREEN ── */
+  .intro-screen { text-align: center; }
+  .intro-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: clamp(32px, 6vw, 56px) clamp(24px, 5vw, 50px);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.04);
+    position: relative; overflow: hidden;
+  }
+  .intro-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--gold-dk), var(--gold), var(--gold-dk));
+  }
+
+  .intro-icon {
+    font-size: 56px;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 20px rgba(201,149,74,0.5));
+  }
+
+  .intro-lead {
+    font-size: 1.05rem;
+    color: rgba(240,230,208,0.75);
+    max-width: 520px;
+    margin: 0 auto 32px;
+    font-style: italic;
+    line-height: 1.7;
+  }
+
+  .intro-stats {
+    display: flex; justify-content: center; gap: clamp(20px, 4vw, 40px);
+    margin-bottom: 36px;
+  }
+  .stat-item {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--gold);
+  }
+  .stat-lbl {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--gold-dk), var(--gold));
+    border: none;
+    border-radius: 10px;
+    padding: 16px 48px;
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #0e0c0a;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 4px 24px rgba(201,149,74,0.35);
+  }
+  .btn-start:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 36px rgba(201,149,74,0.5);
+  }
+
+  /* ── DIVIDER ORNAMENT ── */
+  .ornament {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; margin: 28px 0;
+    color: var(--gold); font-size: 14px;
+  }
+  .ornament::before, .ornament::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border));
+  }
+  .ornament::after {
+    background: linear-gradient(90deg, var(--border), transparent);
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes flashCorrect {
+    0%   { background: rgba(74,124,89,0.5); }
+    100% { background: rgba(74,124,89,0.18); }
+  }
+  @keyframes flashWrong {
+    0%   { background: rgba(139,58,58,0.5); }
+    100% { background: rgba(139,58,58,0.18); }
+  }
+  @keyframes sparkle {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.7; transform: scale(1.15); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .intro-stats { gap: 16px; }
+    .option-btn { padding: 12px 14px; gap: 10px; }
+    .option-letter { width: 24px; height: 24px; font-size: 10px; }
+  }
+
+  @media (min-width: 1200px) {
+    .wrapper { max-width: 900px; }
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 20px 0;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: rgba(138,122,98,0.4);
+    text-transform: uppercase;
+  }
+
+  /* hide quiz parts initially */
+  #quiz-area { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Mountain silhouette background -->
+<div class="mountains-bg">
+  <svg viewBox="0 0 1400 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+    <path d="M0,200 L0,140 L60,100 L120,130 L200,60 L280,90 L340,40 L420,80 L500,20 L580,70 L640,30 L720,60 L800,10 L880,50 L940,20 L1000,55 L1080,15 L1160,50 L1240,30 L1320,70 L1400,40 L1400,200 Z" fill="#c9954a"/>
+    <path d="M0,200 L0,160 L80,130 L160,150 L240,110 L320,140 L400,90 L480,120 L560,80 L640,110 L720,70 L800,100 L880,60 L960,95 L1040,55 L1120,85 L1200,65 L1280,95 L1360,75 L1400,90 L1400,200 Z" fill="#1a1612"/>
+  </svg>
+</div>
+
+<div class="wrapper">
+  <header>
+    <div class="header-ornament"><span>⛰</span></div>
+    <div class="klass-badge">Школьный проект · 9Б класс</div>
+    <h1>Легенды и<br><em>мифы Урала</em></h1>
+    <p class="subtitle">Проверь свои знания о фольклоре Уральского края</p>
+
+    <!-- score + progress (hidden until quiz starts) -->
+    <div id="header-meta" style="display:none">
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-label" id="progress-label">1 / 10</div>
+      </div>
+      <div style="display:flex;justify-content:center">
+        <div class="score-chip">⭐ Очки: <span class="score-num" id="live-score">0</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ INTRO ═══ -->
+  <div id="intro-screen" class="intro-screen">
+    <div class="intro-card">
+      <div class="intro-icon">🏔️</div>
+      <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.4rem,3vw,1.9rem);margin-bottom:16px;color:var(--cream)">Готова ли ты отправиться<br>в путешествие по легендам Урала?</h2>
+      <p class="intro-lead">10 вопросов о горах, озёрах, народах и преданиях Уральского края. После каждого ответа — интересный рассказ о легенде. Торопиться не нужно, здесь важно думать!</p>
+      <div class="intro-stats">
+        <div class="stat-item"><span class="stat-num">10</span><span class="stat-lbl">вопросов</span></div>
+        <div class="stat-item"><span class="stat-num">∞</span><span class="stat-lbl">времени</span></div>
+        <div class="stat-item"><span class="stat-num">10</span><span class="stat-lbl">баллов</span></div>
+      </div>
+      <button class="btn-start" onclick="startQuiz()">Начать квиз →</button>
+    </div>
+  </div>
+
+  <!-- ═══ QUIZ ═══ -->
+  <div id="quiz-area">
+    <div class="question-card" id="question-card">
+      <div class="q-number" id="q-number">Вопрос 1 из 10</div>
+      <div class="q-text" id="q-text"></div>
+      <div class="options" id="options"></div>
+      <div class="explanation" id="explanation">
+        <div class="explanation-title">✦ Пояснение</div>
+        <p id="explanation-text"></p>
+      </div>
+      <div class="next-wrap">
+        <button class="btn-next" id="btn-next" onclick="nextQuestion()">
+          <span id="next-label">Следующий вопрос</span> →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RESULT ═══ -->
+  <div id="result-screen" class="result-screen">
+    <div class="result-card">
+      <div class="stars" id="result-stars">⭐⭐⭐⭐⭐</div>
+      <div class="big-score" id="result-score">10</div>
+      <div class="score-of">из 10 баллов</div>
+      <div class="result-title" id="result-title">Знаток легенд!</div>
+      <p class="result-desc" id="result-desc">Отличная работа!</p>
+
+      <button class="btn-restart" onclick="restartQuiz()">↺ Пройти ещё раз</button>
+
+      <div class="summary" id="summary">
+        <div class="summary-title">Разбор ответов</div>
+        <div class="summary-list" id="summary-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Каримова В.Е. · МБОУ СОШ №109 · 2024</footer>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    q: "В башкирской легенде великан носил пояс с глубокими карманами, в которых хранил свои богатства. Что произошло с этим поясом однажды?",
+    opts: [
+      "Великан подарил пояс людям, и те разделили богатства поровну",
+      "Пояс упал в море и превратился в острова",
+      "Великан растянул пояс, и тот лёг через всю землю, став Уральскими горами",
+      "Пояс разорвался, и сокровища рассыпались по степям"
+    ],
+    correct: 2,
+    answer: "Правильный ответ: пояс лёг через всю землю и стал Уральскими горами",
+    explain: "Согласно башкирской легенде, великан растянул свой пояс от холодного Карского моря на севере до тёплого Каспийского на юге — так и образовался Уральский хребет. А в «карманах» пояса до сих пор хранятся несметные подземные богатства: золото, самоцветы, железо."
+  },
+  {
+    q: "По легенде об озере Тургояк, почему красивое селение ушло под воду?",
+    opts: [
+      "Жители сами затопили его, спасаясь от врагов",
+      "Их наказали за жестокость и гордыню — прогнали голодного старца",
+      "Землетрясение опустило деревню на дно",
+      "Злой дух забрал деревню в уплату за богатый урожай"
+    ],
+    correct: 1,
+    answer: "Правильный ответ: жители прогнали голодного старца и были наказаны",
+    explain: "По легенде, жители деревни были горды и жестоки: прогоняли путников, смеялись над слабыми. Когда они прогнали пришедшего старца, тот произнёс проклятие — и деревня опустилась на дно. Говорят, в тихую погоду на дне Тургояка можно разглядеть очертания домов."
+  },
+  {
+    q: "Из-за чего, согласно легенде, поссорились три брата-великана и превратились в камни?",
+    opts: [
+      "Не смогли поделить охотничьи угодья",
+      "Поспорили, кто сильнее",
+      "Каждый хотел взять в жёны одну и ту же девушку",
+      "Старший брат обманул младших при дележе наследства"
+    ],
+    correct: 2,
+    answer: "Правильный ответ: каждый хотел жениться на одной девушке",
+    explain: "Три брата жили дружно, вместе охотились и пасли скот. Но когда они полюбили одну и ту же девушку, дружба рассыпалась. Братья так и не смирились и окаменели — встали тремя высокими скалами, навечно глядящими в разные стороны. Эти скалы до сих пор можно увидеть на Южном Урале."
+  },
+  {
+    q: "В легенде о происхождении эха: что именно злая колдунья сделала с девушкой, у которой был прекрасный голос?",
+    opts: [
+      "Лишила её голоса навсегда",
+      "Превратила в птицу",
+      "Оставила ей только голос, забрав тело",
+      "Усыпила её в пещере на тысячу лет"
+    ],
+    correct: 2,
+    answer: "Правильный ответ: оставила только голос, забрав тело",
+    explain: "Колдунья позавидовала певунье, которой заслушивались птицы и звери, и лишила её тела — оставив лишь голос. С тех пор этот голос скитается по ущельям и скалам, откликается на каждое слово, но не может найти покой. Именно его мы слышим как горное эхо."
+  },
+  {
+    q: "Согласно легенде, девушка Агидель превратилась в реку. Почему она это сделала?",
+    opts: [
+      "Хотела навсегда остаться в родных горах",
+      "Спасалась от злого хана, который хотел взять её силой",
+      "Поспорила с горным духом, кто быстрее добежит до моря",
+      "Принесла себя в жертву, чтобы напоить засыхающую землю"
+    ],
+    correct: 1,
+    answer: "Правильный ответ: спасалась от злого хана",
+    explain: "Красавицу Агидель нечестный хан хотел взять силой. Она убежала от него, превратившись в быструю реку. С тех пор она бежит не останавливаясь — ведь остановиться значит попасть в плен. Так объясняется и характер реки Белой: быстрая, с порогами, непокорная."
+  },
+  {
+    q: "В легенде о верблюде-горе: как каменный верблюд защитил молодожёнов?",
+    opts: [
+      "Унёс их на своей спине в безопасное место",
+      "Встал между ними и злым колдуном и принял на себя заклятие, окаменев",
+      "Затоптал колдуна своими огромными ногами",
+      "Выпил из озера воду, которой тот хотел их отравить"
+    ],
+    correct: 1,
+    answer: "Правильный ответ: принял на себя заклятие и окаменел",
+    explain: "Могучий верблюд нёс через горы молодожёнов. Злой колдун, которому отказали в руке невесты, догнал их и попытался отнять девушку. Верблюд встал между ними и принял колдовской удар на себя — окаменел, но не пропустил злодея. Молодые были спасены, а верблюд навечно остался стоять в горах."
+  },
+  {
+    q: "По легенде о Зюраткуле, почему озеро получило название «сердце-озеро»?",
+    opts: [
+      "Из-за необычной формы берегов, похожей на сердце",
+      "Здесь юноша и девушка из враждующих родов бросились в воду и превратились в рыб",
+      "Местный шаман вынул сердце горного духа и опустил его в воду",
+      "Вода озера исцеляла сердечные болезни"
+    ],
+    correct: 1,
+    answer: "Правильный ответ: влюблённые из враждующих родов бросились в воду",
+    explain: "Юноша Зюрат полюбил девушку из враждебного рода, но их отцы не позволили им быть вместе. Влюблённые бросились в горное озеро и превратились в серебристых рыб. С тех пор озеро зовут «сердечным»: оно хранит память о любви, которая оказалась сильнее смерти."
+  },
+  {
+    q: "Что, согласно легенде, делает луна на вершине горы Таганай?",
+    opts: [
+      "Набирает силу перед долгой зимой",
+      "Беседует с горными духами",
+      "Отдыхает во время ночного путешествия по небу",
+      "Прячет украденные у людей сны"
+    ],
+    correct: 2,
+    answer: "Правильный ответ: отдыхает во время ночного путешествия",
+    explain: "Название «Таганай» переводится с башкирского как «подставка луны» или «опора луны». По легенде, именно на каменном гребне Таганая луна останавливается передохнуть в своём ночном пути. В ясные ночи можно увидеть, как она «садится» на острую вершину горы."
+  },
+  {
+    q: "В легенде о Горящей горе близ Копейска: кто заключён под землёй и не может вырваться наружу?",
+    opts: [
+      "Войско проигравшего хана",
+      "Дух огня",
+      "Дракон, проглотивший солнечный камень",
+      "Душа кузнеца, нарушившего клятву"
+    ],
+    correct: 1,
+    answer: "Правильный ответ: дух огня",
+    explain: "По легенде, под Горящей горой заключён дух огня, который никак не может вырваться на свободу — именно поэтому из-под земли временами поднимается дым. В действительности это подземные самовозгорания угольных пластов, которые исследовали геологи ещё в XIX веке."
+  },
+  {
+    q: "В башкирском предании: добрый и злой духи поспорили, кто сильнее, и оба ударили посохами в землю. Что выросло в результате удара злого духа?",
+    opts: [
+      "Глубокие пропасти и пещеры",
+      "Болота и топи",
+      "Горы поменьше — каменистые и угрюмые",
+      "Ядовитые растения и колючие кустарники"
+    ],
+    correct: 2,
+    answer: "Правильный ответ: небольшие каменистые и угрюмые горы",
+    explain: "Добрый дух ударил посохом — и выросли высокие красивые горы с чистыми реками и дремучими лесами. Злой дух ударил тоже — но его горы вышли поменьше, каменистые и суровые. Именно поэтому на Урале горы такие разные: одни величественные и щедрые, другие — мрачные и скупые."
+  }
+];
+
+const LETTERS = ['А', 'Б', 'В', 'Г'];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let userAnswers = [];
+
+function startQuiz() {
+  document.getElementById('intro-screen').style.display = 'none';
+  document.getElementById('quiz-area').style.display = 'block';
+  document.getElementById('header-meta').style.display = 'block';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = QUESTIONS[current];
+
+  // update progress
+  const pct = (current / QUESTIONS.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = (current + 1) + ' / ' + QUESTIONS.length;
+
+  // question number
+  document.getElementById('q-number').textContent = 'Вопрос ' + (current + 1) + ' из ' + QUESTIONS.length;
+
+  // question text
+  document.getElementById('q-text').textContent = q.q;
+
+  // options
+  const optWrap = document.getElementById('options');
+  optWrap.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${LETTERS[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => selectAnswer(i, btn));
+    optWrap.appendChild(btn);
+  });
+
+  // hide explanation + next
+  const exp = document.getElementById('explanation');
+  exp.classList.remove('show');
+  document.getElementById('btn-next').classList.remove('show');
+
+  // animate card
+  const card = document.getElementById('question-card');
+  card.style.animation = 'none';
+  card.offsetHeight; // reflow
+  card.style.animation = 'slideUp 0.4s cubic-bezier(0.4,0,0.2,1)';
+}
+
+function selectAnswer(idx, clickedBtn) {
+  if (answered) return;
+  answered = true;
+
+  const q = QUESTIONS[current];
+  const buttons = document.querySelectorAll('.option-btn');
+  buttons.forEach(b => b.disabled = true);
+
+  const isCorrect = idx === q.correct;
+
+  if (isCorrect) {
+    score++;
+    document.getElementById('live-score').textContent = score;
+    clickedBtn.classList.add('correct');
+  } else {
+    clickedBtn.classList.add('wrong');
+    // reveal correct
+    buttons[q.correct].classList.add('reveal-correct');
+  }
+
+  userAnswers.push({ q: q.q, correct: isCorrect });
+
+  // show explanation
+  document.getElementById('explanation-text').innerHTML =
+    `<span class="answer-label">${q.answer}.</span> ${q.explain}`;
+  document.getElementById('explanation').classList.add('show');
+
+  // next button
+  const nextBtn = document.getElementById('btn-next');
+  nextBtn.classList.add('show');
+  if (current === QUESTIONS.length - 1) {
+    document.getElementById('next-label').textContent = 'Узнать результат';
+  } else {
+    document.getElementById('next-label').textContent = 'Следующий вопрос';
+  }
+
+  // update progress to current
+  const pct = ((current + 1) / QUESTIONS.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= QUESTIONS.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-area').style.display = 'none';
+  document.getElementById('header-meta').style.display = 'none';
+  document.getElementById('progress-fill').style.width = '100%';
+
+  const rs = document.getElementById('result-screen');
+  rs.classList.add('show');
+
+  document.getElementById('result-score').textContent = score;
+
+  // stars
+  const pct = score / QUESTIONS.length;
+  let stars = '', title = '', desc = '';
+  if (pct === 1) {
+    stars = '⭐⭐⭐⭐⭐';
+    title = 'Настоящий знаток легенд Урала!';
+    desc = 'Ты великолепно знаешь фольклор родного края. Можно смело отправляться в экспедицию по уральским горам!';
+  } else if (pct >= 0.8) {
+    stars = '⭐⭐⭐⭐';
+    title = 'Отличный результат!';
+    desc = 'Легенды Урала тебе хорошо знакомы. Ещё немного — и ты станешь настоящим экспертом!';
+  } else if (pct >= 0.6) {
+    stars = '⭐⭐⭐';
+    title = 'Хороший результат!';
+    desc = 'Ты знаешь немало об уральских легендах, но ещё есть что открыть. Прочитай проект внимательнее!';
+  } else if (pct >= 0.4) {
+    stars = '⭐⭐';
+    title = 'Неплохое начало!';
+    desc = 'Уральский фольклор богат и разнообразен. Попробуй пройти квиз ещё раз — уверена, будет лучше!';
+  } else {
+    stars = '⭐';
+    title = 'Есть куда расти!';
+    desc = 'Не расстраивайся — легенды Урала очень интересны. Изучи их и приходи снова!';
+  }
+
+  document.getElementById('result-stars').textContent = stars;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-desc').textContent = desc;
+
+  // summary
+  const list = document.getElementById('summary-list');
+  list.innerHTML = '';
+  userAnswers.forEach((a, i) => {
+    const div = document.createElement('div');
+    div.className = 'summary-item';
+    div.innerHTML = `
+      <div class="summary-icon ${a.correct ? 'ok' : 'bad'}">${a.correct ? '✓' : '✗'}</div>
+      <div class="summary-q"><strong>Вопрос ${i+1}:</strong> ${a.q}</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function restartQuiz() {
+  current = 0; score = 0; answered = false; userAnswers = [];
+  document.getElementById('live-score').textContent = '0';
+  document.getElementById('result-screen').classList.remove('show');
+  document.getElementById('quiz-area').style.display = 'block';
+  document.getElementById('header-meta').style.display = 'block';
+  renderQuestion();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
